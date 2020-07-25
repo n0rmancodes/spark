@@ -1,0 +1,28 @@
+{
+  "name": "spark",
+  "version": "1.0.0",
+  "description": "alternative client for twitch.tv",
+  "main": "index.js",
+  "scripts": {
+    "test": "node ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/n0rmancodes/spark.git"
+  },
+  "keywords": [
+    "twitch",
+    "twitch.tv",
+    "scraper"
+  ],
+  "author": "n0rmancodes",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/n0rmancodes/spark/issues"
+  },
+  "homepage": "https://github.com/n0rmancodes/spark#readme",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.3",
+    "got": "^11.5.1"
+  }
+}
