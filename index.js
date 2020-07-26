@@ -1,13 +1,14 @@
 const got = require("got");
+const jimp = require("jimp");
 const http = require("http");
 const url = require("url");
 const fs = require("fs");
 const vers = "0.1";
 http.createServer(runServer).listen(3000);
-function runServer(req,res) {
+async function runServer(req,res) {
 	const r = url.parse(req.url, true);
-	const path = r.path;
-	const param = r.query;
+	var path = r.path;
+	var param = r.query;
 	if (path.includes("/")) {
 		const s = path.split("/")
 		if (s[1] == "api" && s[2]) {
@@ -113,10 +114,18 @@ function runServer(req,res) {
 						}
 					}).then(function(response) {
 						var raw = JSON.parse(response.body)
-						var body = JSON.stringify({
-							"gameInfo": raw[0].data.game,
-							"streams": raw[1].data.game.streams.edges
-						})
+						if (raw[0].data.game && raw[1].data.game.streams) {
+							var body = JSON.stringify({
+								"gameInfo": raw[0].data.game,
+								"streams": raw[1].data.game.streams.edges
+							});
+						} else {
+							if (raw[0].data.game == null) {
+								var body = JSON.stringify({
+									"err": "noGameFound"
+								});
+							}
+						}
 						res.writeHead(200, {
 							"Access-Control-Allow-Origin": "*",
 							"Content-Type": "application/json"
@@ -185,13 +194,31 @@ function runServer(req,res) {
 					})
 					res.end(body);
 				})
+			} else if (s[2] == "proxy") {
+				var decode = Buffer.from(param.url,"base64").toString();
+				got(decode).then(async function (response) {
+					var h = response.headers;
+					var r = response.rawBody;
+					res.writeHead(response.statusCode,h);
+					res.end(r);
+				})
+			} else {
+				var j = JSON.stringify({
+					"err":"invalidEnpoint",
+					"version":vers
+				})
+				res.writeHead(404, {
+					"Access-Control-Allow-Origin": "*",
+					"Content-Type": "application/json"
+				})
+				res.end(j);
 			}
 		} else if (s[1] == "api" && !s[2]) {
 			var j = JSON.stringify({
 				"err":"invalidEnpoint",
 				"version":vers
 			})
-			res.writeHead(200, {
+			res.writeHead(404, {
 				"Access-Control-Allow-Origin": "*",
 				"Content-Type": "application/json"
 			})
@@ -221,29 +248,60 @@ function runServer(req,res) {
 						res.end(resp);
 					}
 				})
-			} else if (s[1] == "game") {
-				
 			} else {
+				var path = path.split("?")[0];
 				fs.readFile("./web-content" + path, function(err,resp) {
 					if (err) {
 						if (err.code == "EISDIR") {
-							fs.readFile("./web-content" + path + "/index.html", function(err,resp) {
-								if (err) {
-									if (err.code == "ENONET") {
-										fs.readFile("./errors/404.html", function(err,resp) {
-											if (err){
-												res.writeHead(404, {
-													"Access-Control-Allow-Origin": "*",
-													"Content-Type":"text/html"
-												})
-												res.end(resp);
-											} else {
-												res.end(err.code);
-											}
+							if (path.substring(path.length - 1, path.length) == "/") {
+								fs.readFile("./web-content" + path + "index.html", function(err,resp) {
+									if (err) {
+										if (err.code == "ENONET") {
+											fs.readFile("./errors/404.html", function(err,resp) {
+												if (err){
+													res.writeHead(404, {
+														"Access-Control-Allow-Origin": "*",
+														"Content-Type":"text/html"
+													})
+													res.end(resp);
+												} else {
+													res.end(err.code);
+												}
+											})
+										}
+									} else {
+										res.writeHead(200, {
+											"Access-Control-Allow-Origin": "*",
+											"Content-Type":"text/html"
 										})
+										res.end(resp);
 									}
-								}
-							})
+								})
+							} else {
+								fs.readFile("./web-content" + path + "/index.html", function(err,resp) {
+									if (err) {
+										if (err.code == "ENONET") {
+											fs.readFile("./errors/404.html", function(err,resp) {
+												if (err){
+													res.writeHead(404, {
+														"Access-Control-Allow-Origin": "*",
+														"Content-Type":"text/html"
+													})
+													res.end(resp);
+												} else {
+													res.end(err.code);
+												}
+											})
+										}
+									} else {
+										res.writeHead(200, {
+											"Access-Control-Allow-Origin": "*",
+											"Content-Type":"text/html"
+										})
+										res.end(resp);
+									}
+								})
+							}
 						} else if (err.code == "ENOENT") {
 							fs.readFile("./errors/404.html", function(err,resp) {
 								if (!err) {

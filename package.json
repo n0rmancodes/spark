@@ -23,6 +23,7 @@
   "homepage": "https://github.com/n0rmancodes/spark#readme",
   "dependencies": {
     "cheerio": "^1.0.0-rc.3",
-    "got": "^11.5.1"
+    "got": "^11.5.1",
+    "jimp": "^0.14.0"
   }
 }
