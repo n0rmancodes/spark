@@ -2,7 +2,7 @@ load();
 
 function load() {
 	var xhr = new XMLHttpRequest();
-	var g = window.location.href.split("?game=")[1];
+	var g = decodeURI(window.location.href.split("?game=")[1]);
 	xhr.open("GET", "/api/game/?game=" + g);
 	xhr.send();
 	xhr.onload = function () {
@@ -21,6 +21,7 @@ function load() {
 			document.getElementById("cover").style = "background: url('" + json.gameInfo.avatarURL + "');";
 			document.getElementById("main").style.display = "";
 			document.getElementById("gameTitle").innerHTML = json.gameInfo.name;
+			document.title = json.gameInfo.name + " | Spark";
 			document.getElementById("gameViews").innerHTML = json.gameInfo.viewersCount.toLocaleString();
 			document.getElementById("gameFollow").innerHTML = json.gameInfo.followersCount.toLocaleString();
 			for (var c in json.streams) {

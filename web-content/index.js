@@ -10,7 +10,7 @@ function loadGames() {
 		var json = JSON.parse(xhr.responseText);
 		for (var c in json) {
 			var link = document.createElement("A");
-			link.href = "/game/?game=" + json[c].node.name;
+			link.href = "/game/?game=" + encodeURIComponent(json[c].node.name);
 			var div = document.createElement("DIV");
 			div.classList.add("game");
 			div.style = "background: url('/api/proxy/?url=" + btoa(json[c].node.avatarURL) + "');";
@@ -29,5 +29,6 @@ function loadGames() {
 			link.appendChild(div);
 			document.getElementById("feed").appendChild(link);
 		}
+		document.getElementById("main").style.display = "";
 	}
 }

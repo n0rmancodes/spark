@@ -134,45 +134,18 @@ async function runServer(req,res) {
 					})
 				}
 			} else if (s[2] == "channel") {
-				var u = s[3];
+				var u = s[3].toLowerCase();
 				got.post("https://gql.twitch.tv/gql#origin=twilight", {
-					json: [
-						{
-							"operationName":"ChannelShell",
-							"variables": {
-								"login": u
-							},
-							"extensions": {
-								"persistedQuery": {
-									"sha256Hash": "2b29e2150fe65ee346e03bd417bbabbd0471a01a84edb7a74e3c6064b0283287",
-									"version":1	
-								}
-							}
-						},
-						{
-							"operationName":"UseLive",
-							"variables": {
-								"channelLogin": u
-							},
-							"extensions": {
-								"persistedQuery": {
-									"sha256Hash": "639d5f11bfb8bf3053b424d9ef650d04c4ebb7d94711d644afb08fe9a0fad5d9",
-									"version":1	
-								}
-							}
-						},
-						{
-							"operationName":"UseHosting",
-							"variables": {
-								"channelLogin": u
-							},
-							"extensions": {
-								"persistedQuery": {
-									"sha256Hash": "427f55a3daca510f726c02695a898ef3a0de4355b39af328848876052ea6b337",
-									"version":1	
-								}
-							}
-						}
+					json:[
+						{"operationName":"ChannelShell","variables":{"login":u},"extensions":{"persistedQuery":{"version":1,"sha256Hash":"2b29e2150fe65ee346e03bd417bbabbd0471a01a84edb7a74e3c6064b0283287"}}},
+						{"operationName":"UseLive","variables":{"channelLogin":u},"extensions":{"persistedQuery":{"version":1,"sha256Hash":"639d5f11bfb8bf3053b424d9ef650d04c4ebb7d94711d644afb08fe9a0fad5d9"}}},
+						{"operationName":"UseHosting","variables":{"channelLogin":u},"extensions":{"persistedQuery":{"version":1,"sha256Hash":"427f55a3daca510f726c02695a898ef3a0de4355b39af328848876052ea6b337"}}},
+						{"operationName":"PlayerTrackingContextQuery","variables":{"channel":u,"isLive":true,"hasCollection":false,"collectionID":"","videoID":"","hasVideo":false,"slug":"","hasClip":false},"extensions":{"persistedQuery":{"version":1,"sha256Hash":"dba40c8780d87bf368b0c7179fc02ed349e3ce95be3ccf1d77267d23be5c3c75"}}},
+						{"operationName":"VideoPreviewOverlay","variables":{"login":u},"extensions":{"persistedQuery":{"version":1,"sha256Hash":"3006e77e51b128d838fa4e835723ca4dc9a05c5efd4466c1085215c6e437e65c"}}},
+						{"operationName":"VideoAdBanner","variables":{"input":{"login":u,"ownsCollectionID":"","ownsVideoID":""}},"extensions":{"persistedQuery":{"version":1,"sha256Hash":"33c38317fd1d2ca11dfd51ca241e7670eb55382c3cf435230ff244e6cd6af391"}}},
+						{"operationName":"MatureGateOverlayBroadcaster","variables":{"input":{"login":u,"ownsVideoID":null}},"extensions":{"persistedQuery":{"version":1,"sha256Hash":"db5c4f54238cb6cde9d1ab49dab9d6388bb4990304766fcd70c1f37d4ed93bdb"}}},
+						{"operationName":"StreamTagsTrackingChannel","variables":{"channel":u},"extensions":{"persistedQuery":{"version":1,"sha256Hash":"327d7b1596b37898de6a0eaabfdd8ee37b6cc586daab0d12b8fad64f03856a4a"}}},
+						{"operationName":"PersonalSections","variables":{"input":{"sectionInputs":["RECOMMENDED_SECTION"],"recommendationContext":{"platform":"web"}}},"extensions":{"persistedQuery":{"version":1,"sha256Hash":"956b5b6ecd1d461f51268755fbb15ef0570057872fbdcf736f07f5eaaf2c6778"}}},
 					],
 					headers: {
 						"Accept": "*/*",
@@ -183,10 +156,42 @@ async function runServer(req,res) {
 					}
 				}).then(function(response) {
 					var raw = JSON.parse(response.body);
+					if (raw[7].data.user.stream) {
+						var tags = raw[7].data.user.stream.tags;
+					} else {
+						var tags = null;
+					}
+					if (raw[4].data.user.stream) {
+						var pr = raw[4].data.user.stream.previewImageURL;
+						var r = raw[4].data.user.stream.restriction;
+					} else {
+						var pr = null;
+						var r = null;
+					}
 					var body = JSON.stringify({
-						"profile": raw[0].data.user,
-						"stream": raw[1].data.user.stream,
-						"hosting": raw[2].data.user.hosting
+						"profile": {
+							"id": raw[0].data.user.id,
+							"login": raw[0].data.user.login,
+							"display": raw[0].data.user.displayName,
+							"hex": raw[0].data.user.primaryColorHex,
+							"profilePic": raw[0].data.user.profileImageURL,
+							"trailer": raw[0].data.user.channel.trailer,
+							"isAffiliate": raw[5].data.userByAttribute.roles.isAffiliate,
+							"isPartner": raw[3].data.user.isPartner,
+							"isMature": raw[6].data.userByAttribute.broadcastSettings.isMature,
+						},
+						"stream": {
+							"UseLive": raw[1].data.user.stream,
+							"PlayerTrackingContextQuery": raw[3].data.user.stream,
+							"tags": tags
+						},
+						"hosting": raw[2].data.user.hosting,
+						"game": raw[3].data.user.game,
+						"thumbnail": {
+							"url": pr,
+							"restricted": r
+						},
+						"reccomended": raw[8].data.personalSections,
 					})
 					res.writeHead(200, {
 						"Access-Control-Allow-Origin": "*",
