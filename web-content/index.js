@@ -5,8 +5,7 @@ function loadGames() {
 	xhr.open("GET", "/api/games/");
 	xhr.send();
 	xhr.onload = function () {
-		document.getElementById("loaderSfx").loop = false;
-		document.getElementById("loader").style.display = "none";
+		endLoad();
 		var json = JSON.parse(xhr.responseText);
 		for (var c in json) {
 			var link = document.createElement("A");
@@ -29,6 +28,5 @@ function loadGames() {
 			link.appendChild(div);
 			document.getElementById("feed").appendChild(link);
 		}
-		document.getElementById("main").style.display = "";
 	}
 }

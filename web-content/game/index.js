@@ -6,8 +6,7 @@ function load() {
 	xhr.open("GET", "/api/game/?game=" + g);
 	xhr.send();
 	xhr.onload = function () {
-		document.getElementById("loaderSfx").loop = false;
-		document.getElementById("loader").style.display = "none";
+		endLoad();
 		var json = JSON.parse(xhr.responseText);
 		if (json.err) {
 			if (json.err == "noGameFound") {

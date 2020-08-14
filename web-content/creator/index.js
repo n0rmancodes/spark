@@ -6,6 +6,6 @@ function load() {
 	xhr.open("GET", "/api/channel/" + name);
 	xhr.send();
 	xhr.onload = function() {
-		
+		endLoad();
 	}
 }
